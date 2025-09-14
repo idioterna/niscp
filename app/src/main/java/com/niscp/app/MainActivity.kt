@@ -297,14 +297,15 @@ class MainActivity : ComponentActivity() {
     private fun requestPermissions() {
         val permissionsToRequest = mutableListOf<String>()
         
-        // Check and request READ_MEDIA_IMAGES permission (Android 13+)
+        // Check and request storage permission based on Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ uses READ_MEDIA_IMAGES
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) 
                 != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES)
             }
         } else {
-            // For older versions, request READ_EXTERNAL_STORAGE
+            // Android 9-12 uses READ_EXTERNAL_STORAGE
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) 
                 != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)

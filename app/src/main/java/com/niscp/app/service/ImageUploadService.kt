@@ -61,7 +61,14 @@ class ImageUploadService : Service() {
                 if (imageUris != null && imageUris.isNotEmpty()) {
                     // Start as foreground service with initial notification
                     android.util.Log.d("ImageUploadService", "Starting foreground service with notification")
-                    startForeground(NOTIFICATION_ID, createInitialNotification())
+                    try {
+                        startForeground(NOTIFICATION_ID, createInitialNotification())
+                        android.util.Log.d("ImageUploadService", "Foreground service started successfully")
+                    } catch (e: Exception) {
+                        android.util.Log.e("ImageUploadService", "Failed to start foreground service: ${e.message}")
+                        // If foreground service fails, try to continue as regular service
+                        // This might happen on older Android versions or with permission issues
+                    }
                     
                     serviceScope.launch {
                         uploadImages(imageUris, filenamePrefix)
