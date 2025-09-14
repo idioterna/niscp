@@ -18,7 +18,7 @@ import java.io.InputStream
 class ShareReceiverActivity : ComponentActivity() {
     
     private lateinit var binding: ActivityShareReceiverBinding
-    private var imageUris: List<Uri> = emptyList()
+    private var mediaUris: List<Uri> = emptyList()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,14 +35,14 @@ class ShareReceiverActivity : ComponentActivity() {
                 @Suppress("DEPRECATION")
                 val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                 if (uri != null) {
-                    imageUris = listOf(uri)
+                    mediaUris = listOf(uri)
                 }
             }
             Intent.ACTION_SEND_MULTIPLE -> {
                 @Suppress("DEPRECATION")
                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 if (uris != null) {
-                    imageUris = uris
+                    mediaUris = uris
                 }
             }
         }
@@ -61,16 +61,16 @@ class ShareReceiverActivity : ComponentActivity() {
     }
     
     private fun updateImageCount() {
-        val count = imageUris.size
+        val count = mediaUris.size
         binding.imageCountText.text = if (count == 1) {
-            "1 image selected"
+            "1 file selected"
         } else {
-            "$count images selected"
+            "$count files selected"
         }
     }
     
     private fun uploadImages() {
-        if (imageUris.isEmpty()) {
+        if (mediaUris.isEmpty()) {
             Toast.makeText(this, getString(R.string.no_images_selected), Toast.LENGTH_SHORT).show()
             return
         }
@@ -83,7 +83,7 @@ class ShareReceiverActivity : ComponentActivity() {
         
         lifecycleScope.launch {
             try {
-                val tempUris = copyImagesToTempLocation(imageUris)
+                val tempUris = copyImagesToTempLocation(mediaUris)
                 
                 val intent = Intent(this@ShareReceiverActivity, ImageUploadService::class.java).apply {
                     action = ImageUploadService.ACTION_UPLOAD_IMAGES
@@ -115,7 +115,21 @@ class ShareReceiverActivity : ComponentActivity() {
             try {
                 val inputStream: InputStream? = contentResolver.openInputStream(uri)
                 if (inputStream != null) {
-                    val tempFile = File(tempDir, "temp_image_${index}_${System.currentTimeMillis()}.jpg")
+                    // Get original filename and extension
+                    val originalName = getFileName(uri)
+                    val extension = if (originalName.contains(".")) {
+                        originalName.substringAfterLast(".")
+                    } else {
+                        // Try to get extension from MIME type
+                        val mimeType = contentResolver.getType(uri)
+                        when {
+                            mimeType?.startsWith("video/") == true -> "mp4" // Default video extension
+                            mimeType?.startsWith("image/") == true -> "jpg" // Default image extension
+                            else -> "bin" // Generic binary
+                        }
+                    }
+                    
+                    val tempFile = File(tempDir, "temp_media_${index}_${System.currentTimeMillis()}.${extension}")
                     val outputStream = FileOutputStream(tempFile)
                     
                     inputStream.copyTo(outputStream)
@@ -127,11 +141,35 @@ class ShareReceiverActivity : ComponentActivity() {
                     throw Exception("Could not open input stream for URI: $uri")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ShareReceiverActivity", "Failed to copy image $index: ${e.message}", e)
-                throw Exception("Failed to copy image $index: ${e.message}")
+                android.util.Log.e("ShareReceiverActivity", "Failed to copy media $index: ${e.message}", e)
+                throw Exception("Failed to copy media $index: ${e.message}")
             }
         }
         
         tempUris
+    }
+    
+    private fun getFileName(uri: Uri): String {
+        return try {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        it.getString(nameIndex) ?: "unknown"
+                    } else {
+                        "unknown"
+                    }
+                } else {
+                    "unknown"
+                }
+            } ?: "unknown"
+        } catch (e: SecurityException) {
+            android.util.Log.w("ShareReceiverActivity", "SecurityException when getting filename: ${e.message}")
+            "unknown-${System.currentTimeMillis()}"
+        } catch (e: Exception) {
+            android.util.Log.w("ShareReceiverActivity", "Exception when getting filename: ${e.message}")
+            "unknown-${System.currentTimeMillis()}"
+        }
     }
 }

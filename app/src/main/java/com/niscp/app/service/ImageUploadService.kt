@@ -16,7 +16,7 @@ import com.niscp.app.MainActivity
 import com.niscp.app.R
 import com.niscp.app.data.SettingsRepository
 import com.niscp.app.data.UploadResult
-import com.niscp.app.util.ImageProcessor
+import com.niscp.app.util.MediaProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,13 +37,13 @@ class ImageUploadService : Service() {
     }
     
     private lateinit var settingsRepository: SettingsRepository
-    private lateinit var imageProcessor: ImageProcessor
+    private lateinit var mediaProcessor: MediaProcessor
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
     
     override fun onCreate() {
         super.onCreate()
         settingsRepository = SettingsRepository(this)
-        imageProcessor = ImageProcessor(this)
+        mediaProcessor = MediaProcessor(this)
         createNotificationChannel()
     }
     
@@ -134,38 +134,39 @@ class ImageUploadService : Service() {
         val totalImages = imageUris.size
         val uploadResults = mutableListOf<UploadResult>()
         
-        // Process and upload each image
-        for ((index, uri) in imageUris.withIndex()) {
+        // Process and upload each image (reverse order so newest is last)
+        for ((index, uri) in imageUris.reversed().withIndex()) {
             try {
-                android.util.Log.d("ImageUploadService", "Processing image ${index + 1} of $totalImages: $uri")
+                android.util.Log.d("ImageUploadService", "Processing file ${index + 1} of $totalImages: $uri")
                 
                 // Update notification
                 updateNotification(
-                    "Processing image ${index + 1} of $totalImages",
-                    index * 2, // Processing is step 1 of 2 for each image
+                    "Processing file ${index + 1} of $totalImages",
+                    index * 2, // Processing is step 1 of 2 for each file
                     totalImages * 2
                 )
                 
-                // Process image
-                val processedImage = imageProcessor.processImage(
+                // Process media (image or video)
+                val processedMedia = mediaProcessor.processMedia(
                     uri,
                     settings.useOriginalSize,
                     settings.customWidth,
                     filenamePrefix,
-                    isMultipleImages = totalImages > 1
+                    isMultipleFiles = totalImages > 1
                 )
                 
                 // Update notification
                 updateNotification(
-                    "Uploading image ${index + 1} of $totalImages",
-                    index * 2 + 1, // Uploading is step 2 of 2 for each image
+                    "Uploading file ${index + 1} of $totalImages",
+                    index * 2 + 1, // Uploading is step 2 of 2 for each file
                     totalImages * 2
                 )
                 
-                // Upload image
-                android.util.Log.d("ImageUploadService", "Uploading image: ${processedImage.newName}")
-                val success = uploadImage(processedImage, settings)
-                android.util.Log.d("ImageUploadService", "Upload result for ${processedImage.newName}: $success")
+                // Upload media
+                val mediaType = if (processedMedia.isVideo) "video" else "image"
+                android.util.Log.d("ImageUploadService", "Uploading $mediaType: ${processedMedia.newName}")
+                val success = uploadMedia(processedMedia, settings)
+                android.util.Log.d("ImageUploadService", "Upload result for ${processedMedia.newName}: $success")
                 
                 // Generate URL if upload was successful
                 val url = if (success && settings.urlPrefix.isNotEmpty()) {
@@ -174,17 +175,17 @@ class ImageUploadService : Service() {
                     } else {
                         "${settings.urlPrefix}/"
                     }
-                    "${urlPrefix}${processedImage.newName}"
+                    "${urlPrefix}${processedMedia.newName}"
                 } else null
                 
-                uploadResults.add(UploadResult(success, processedImage.newName, url))
+                uploadResults.add(UploadResult(success, processedMedia.newName, url))
                 android.util.Log.d("ImageUploadService", "Added result: success=$success, url=$url")
                 
                 // Clean up temporary file
-                processedImage.file.delete()
+                processedMedia.file.delete()
                 
             } catch (e: Exception) {
-                android.util.Log.e("ImageUploadService", "Failed to process image ${index + 1}: ${e.message}", e)
+                android.util.Log.e("ImageUploadService", "Failed to process file ${index + 1}: ${e.message}", e)
                 uploadResults.add(UploadResult(false, "unknown", null))
             }
         }
@@ -213,13 +214,13 @@ class ImageUploadService : Service() {
         }
     }
     
-    private fun uploadImage(processedImage: ImageProcessor.ProcessedImage, settings: com.niscp.app.data.AppSettings): Boolean {
+    private fun uploadMedia(processedMedia: MediaProcessor.ProcessedMedia, settings: com.niscp.app.data.AppSettings): Boolean {
         val jsch = JSch()
         var session: Session? = null
         var sftpChannel: ChannelSftp? = null
         
         return try {
-            android.util.Log.d("ImageUploadService", "Starting upload for: ${processedImage.newName}")
+            android.util.Log.d("ImageUploadService", "Starting upload for: ${processedMedia.newName}")
             jsch.addIdentity("upload", settings.privateKey.toByteArray(), null, null)
             
             session = jsch.getSession(settings.username, settings.hostname, settings.port)
@@ -233,17 +234,17 @@ class ImageUploadService : Service() {
             android.util.Log.d("ImageUploadService", "SFTP channel connected")
             
             val remotePath = if (settings.remoteDirectory.endsWith("/")) {
-                "${settings.remoteDirectory}${processedImage.newName}"
+                "${settings.remoteDirectory}${processedMedia.newName}"
             } else {
-                "${settings.remoteDirectory}/${processedImage.newName}"
+                "${settings.remoteDirectory}/${processedMedia.newName}"
             }
             
             android.util.Log.d("ImageUploadService", "Uploading to remote path: $remotePath")
-            sftpChannel.put(FileInputStream(processedImage.file), remotePath)
-            android.util.Log.d("ImageUploadService", "Upload completed successfully for: ${processedImage.newName}")
+            sftpChannel.put(FileInputStream(processedMedia.file), remotePath)
+            android.util.Log.d("ImageUploadService", "Upload completed successfully for: ${processedMedia.newName}")
             true
         } catch (e: Exception) {
-            android.util.Log.e("ImageUploadService", "Upload failed for ${processedImage.newName}", e)
+            android.util.Log.e("ImageUploadService", "Upload failed for ${processedMedia.newName}", e)
             e.printStackTrace()
             false
         } finally {

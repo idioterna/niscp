@@ -299,10 +299,14 @@ class MainActivity : ComponentActivity() {
         
         // Check and request storage permission based on Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ uses READ_MEDIA_IMAGES
+            // Android 13+ uses READ_MEDIA_IMAGES and READ_MEDIA_VIDEO
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) 
                 != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) 
+                != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.READ_MEDIA_VIDEO)
             }
         } else {
             // Android 9-12 uses READ_EXTERNAL_STORAGE
