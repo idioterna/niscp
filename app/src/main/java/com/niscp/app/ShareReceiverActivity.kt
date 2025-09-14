@@ -79,7 +79,7 @@ class ShareReceiverActivity : ComponentActivity() {
         
         // Show loading state
         binding.uploadButton.isEnabled = false
-        binding.uploadButton.text = "Preparing images..."
+        binding.uploadButton.text = getString(R.string.preparing_images)
         
         lifecycleScope.launch {
             try {
@@ -97,7 +97,7 @@ class ShareReceiverActivity : ComponentActivity() {
                 finish()
             } catch (e: Exception) {
                 binding.uploadButton.isEnabled = true
-                binding.uploadButton.text = "Upload"
+                binding.uploadButton.text = getString(R.string.upload)
                 Toast.makeText(this@ShareReceiverActivity, "Failed to prepare images: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }

@@ -32,8 +32,6 @@
     <!-- Messages -->
     <string name="ssh_key_generated">SSH key generated successfully</string>
     <string name="public_key_copied">Public key copied to clipboard</string>
-    <string name="connection_successful">Connection successful</string>
-    <string name="connection_failed">Connection failed</string>
     <string name="service_started">Upload service started</string>
     <string name="service_stopped_msg">Upload service stopped</string>
     <string name="enter_hostname">Please enter hostname</string>
@@ -56,4 +54,8 @@
     <string name="confirm_permissions">Confirm Permissions</string>
     <string name="permissions_granted">All permissions granted successfully</string>
     <string name="permissions_denied">Some permissions were denied. The app may not work properly.</string>
+    
+    <!-- ShareReceiverActivity strings -->
+    <string name="preparing_images">Preparing images…</string>
+    <string name="upload">Upload</string>
 </resources>
