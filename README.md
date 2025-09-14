@@ -1,5 +1,7 @@
 # niscp - Secure Image Upload via SSH
 
+_vibe coded - i didn't do anything, i merely held a glorified markov chain's hand through the process_
+
 niscp is an Android application that provides secure image upload functionality using SSH/SFTP. It allows users to upload images from their device to a remote server without relying on cloud services, ensuring privacy and data control.
 
 ## Features
