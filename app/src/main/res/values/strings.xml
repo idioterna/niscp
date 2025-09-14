@@ -1,0 +1,59 @@
+<resources>
+    <string name="app_name">niscp</string>
+    
+    <!-- Main Activity -->
+    <string name="hostname">Hostname</string>
+    <string name="port">Port</string>
+    <string name="username">Username</string>
+    <string name="remote_directory">Remote Directory</string>
+    <string name="url_prefix">URL Prefix</string>
+    <string name="image_size">Image Size</string>
+    <string name="original_size">Original Size</string>
+    <string name="custom_width">Custom Width (pixels)</string>
+    <string name="generate_ssh_key">Generate SSH Key</string>
+    <string name="copy_public_key">Copy Public Key</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="start_service">Start Service</string>
+    <string name="stop_service">Stop Service</string>
+    <string name="service_running">Service Running</string>
+    <string name="service_stopped">Service Stopped</string>
+    
+    <!-- Share Receiver Activity -->
+    <string name="upload_images">Upload Images</string>
+    <string name="cancel">Cancel</string>
+    <string name="filename_prefix">Filename Prefix (optional)</string>
+    <string name="uploading_images">Uploading Images</string>
+    
+    <!-- Notifications -->
+    <string name="upload_notification_title">Uploading Images</string>
+    <string name="upload_notification_channel">Image Upload</string>
+    <string name="upload_notification_channel_description">Notifications for image upload progress</string>
+    
+    <!-- Messages -->
+    <string name="ssh_key_generated">SSH key generated successfully</string>
+    <string name="public_key_copied">Public key copied to clipboard</string>
+    <string name="connection_successful">Connection successful</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="service_started">Upload service started</string>
+    <string name="service_stopped_msg">Upload service stopped</string>
+    <string name="enter_hostname">Please enter hostname</string>
+    <string name="enter_username">Please enter username</string>
+    <string name="enter_remote_directory">Please enter remote directory</string>
+    <string name="invalid_port">Invalid port number</string>
+    <string name="no_images_selected">No images selected</string>
+    
+    <!-- Additional strings for hardcoded text -->
+    <string name="connection_settings">Connection Settings</string>
+    <string name="default_port">22</string>
+    <string name="ssh_key_management">SSH Key Management</string>
+    <string name="one_image_selected">1 image selected</string>
+    <string name="file_naming">File Naming</string>
+    <string name="filename_hint">Leave empty to keep original filenames</string>
+    
+    <!-- Permissions -->
+    <string name="permissions">Permissions</string>
+    <string name="permissions_description">Grant necessary permissions for image upload and notifications to work properly.</string>
+    <string name="confirm_permissions">Confirm Permissions</string>
+    <string name="permissions_granted">All permissions granted successfully</string>
+    <string name="permissions_denied">Some permissions were denied. The app may not work properly.</string>
+</resources>
