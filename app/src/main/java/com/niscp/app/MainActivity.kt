@@ -13,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.niscp.app.databinding.ActivityMainBinding
-import com.niscp.app.service.ImageUploadService
 import com.niscp.app.util.SSHKeyManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -23,7 +22,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var settingsRepository: com.niscp.app.data.SettingsRepository
     private lateinit var sshKeyManager: SSHKeyManager
-    private var isServiceRunning = false
     
     // Permission request launcher
     private val permissionLauncher = registerForActivityResult(
@@ -47,19 +45,9 @@ class MainActivity : ComponentActivity() {
         
         setupUI()
         observeSettings()
-        updateServiceStatus()
     }
     
     private fun setupUI() {
-        // Service control
-        binding.startStopServiceButton.setOnClickListener {
-            if (isServiceRunning) {
-                stopService()
-            } else {
-                startService()
-            }
-        }
-        
         // SSH key management
         binding.generateSshKeyButton.setOnClickListener {
             generateSshKey()
@@ -151,46 +139,6 @@ class MainActivity : ComponentActivity() {
         }
     }
     
-    private fun startService() {
-        lifecycleScope.launch {
-            val settings = settingsRepository.settings.first()
-            
-            if (settings.hostname.isEmpty()) {
-                Toast.makeText(this@MainActivity, getString(R.string.enter_hostname), Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-            
-            if (settings.username.isEmpty()) {
-                Toast.makeText(this@MainActivity, getString(R.string.enter_username), Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-            
-            if (settings.remoteDirectory.isEmpty()) {
-                Toast.makeText(this@MainActivity, getString(R.string.enter_remote_directory), Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-            
-            isServiceRunning = true
-            updateServiceStatus()
-            Toast.makeText(this@MainActivity, getString(R.string.service_started), Toast.LENGTH_SHORT).show()
-        }
-    }
-    
-    private fun stopService() {
-        isServiceRunning = false
-        updateServiceStatus()
-        Toast.makeText(this, getString(R.string.service_stopped_msg), Toast.LENGTH_SHORT).show()
-    }
-    
-    private fun updateServiceStatus() {
-        if (isServiceRunning) {
-            binding.serviceStatusText.text = getString(R.string.service_running)
-            binding.startStopServiceButton.text = getString(R.string.stop_service)
-        } else {
-            binding.serviceStatusText.text = getString(R.string.service_stopped)
-            binding.startStopServiceButton.text = getString(R.string.start_service)
-        }
-    }
     
     private fun generateSshKey() {
         lifecycleScope.launch {
